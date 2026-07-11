@@ -42,11 +42,14 @@ GEMINI_API_KEY = os.environ.get("GEMINI_API_KEY", "").strip()
 IMAGE_MODEL = os.environ.get("IMAGE_MODEL", "gemini-2.5-flash-image").strip()
 IMAGE_RESPONSE_MODALITIES = os.environ.get("IMAGE_RESPONSE_MODALITIES", "").strip()
 
-# 港漫電影分鏡統一風格：確保整套分鏡同一畫風、同一氣質
+# 3D 電影 CGI 統一風格：立體渲染質感（類 Arcane / 黑神話 / Unreal 電影過場），
+# 保留角色英氣設定，但改成 3D 動畫電影質感——這樣丟進 Kling 圖生影，出來才是 3D。
 MANHUA_STYLE = (
-    "{subject}. Hong Kong manhua aesthetic, bold heavy ink linework, dramatic chiaroscuro "
-    "lighting, dynamic exaggerated anatomy, cinematic film still, epic mythic atmosphere, "
-    "highly detailed, widescreen 16:9 cinematic framing, no text, no watermark."
+    "{subject}. Cinematic 3D CGI animation film still, Unreal Engine 5 render, stylized 3D "
+    "characters in the quality of Arcane and AAA game cinematics, physically based rendering, "
+    "volumetric lighting, subsurface scattering, detailed textures, dramatic cinematic lighting, "
+    "depth of field, epic wuxia dark fantasy, highly detailed, 8k, widescreen 16:9 cinematic "
+    "framing, no text, no watermark."
 )
 
 
@@ -85,6 +88,7 @@ async def imagine(request: Request):
     subject = (body.get("prompt") or "").strip()
     style = (body.get("style") or "manhua").strip().lower()
     regen = bool(body.get("regen"))
+    refs = body.get("refs") or []  # 角色參考臉：data URI 陣列（真人直上）
 
     if not GEMINI_API_KEY:
         return JSONResponse({"error": "尚未設定 GEMINI_API_KEY"}, status_code=500)
@@ -94,11 +98,28 @@ async def imagine(request: Request):
         subject = subject[:1500]
     # style: raw=原樣用；其餘(預設 manhua)=套港漫電影風統一後綴
     prompt = subject if style == "raw" else MANHUA_STYLE.format(subject=subject)
+
+    # 真人直上：把參考臉解析成 Gemini 內嵌圖 parts，並在提示詞指示「用參考人物的臉」
+    ref_parts = []
+    for uri in refs[:4]:  # 最多 4 張，避免太多臉混淆
+        try:
+            head, b64 = uri.split(",", 1)
+            mime = head.split(":", 1)[1].split(";", 1)[0] if ":" in head else "image/jpeg"
+            ref_parts.append({"inline_data": {"mime_type": mime, "data": b64}})
+        except Exception:
+            continue
+    if ref_parts:
+        prompt = ("Use the exact facial features, face shape and likeness of the "
+                  f"{len(ref_parts)} reference person(s) provided for the main character(s) in this scene. "
+                  "Keep their real-life face recognizable while rendering everything in the described style. " + prompt)
+
     # regen：加隨機變異碼，強制生成新圖並略過快取（用於「重新生成」）
     if regen:
         prompt = prompt + f"  [variation {os.urandom(3).hex()}]"
 
-    cache = os.path.join(CACHE_DIR, "img_" + hashlib.md5((IMAGE_MODEL + ":" + prompt).encode()).hexdigest() + ".b64")
+    # 快取鍵含參考臉指紋（不同臉＝不同圖）
+    ref_sig = hashlib.md5(("".join(r["inline_data"]["data"][:64] for r in ref_parts)).encode()).hexdigest()[:8] if ref_parts else "noref"
+    cache = os.path.join(CACHE_DIR, "img_" + hashlib.md5((IMAGE_MODEL + ":" + ref_sig + ":" + prompt).encode()).hexdigest() + ".b64")
     if os.path.exists(cache) and not regen:
         with open(cache, encoding="utf-8") as f:
             return JSONResponse({"image": f.read(), "cached": True})
@@ -108,7 +129,9 @@ async def imagine(request: Request):
     gen_cfg = {"temperature": 0.7}
     if IMAGE_RESPONSE_MODALITIES:
         gen_cfg["responseModalities"] = [m.strip() for m in IMAGE_RESPONSE_MODALITIES.split(",") if m.strip()]
-    payload = {"contents": [{"parts": [{"text": prompt}]}], "generationConfig": gen_cfg}
+    # 參考臉圖 parts 放前面，文字指示放後面
+    parts = ref_parts + [{"text": prompt}]
+    payload = {"contents": [{"parts": parts}], "generationConfig": gen_cfg}
     try:
         async with httpx.AsyncClient(timeout=180) as cli:
             r = await cli.post(url, json=payload)
