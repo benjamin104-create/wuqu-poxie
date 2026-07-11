@@ -42,14 +42,14 @@ GEMINI_API_KEY = os.environ.get("GEMINI_API_KEY", "").strip()
 IMAGE_MODEL = os.environ.get("IMAGE_MODEL", "gemini-2.5-flash-image").strip()
 IMAGE_RESPONSE_MODALITIES = os.environ.get("IMAGE_RESPONSE_MODALITIES", "").strip()
 
-# 3D 電影 CGI 統一風格：立體渲染質感（類 Arcane / 黑神話 / Unreal 電影過場），
-# 保留角色英氣設定，但改成 3D 動畫電影質感——這樣丟進 Kling 圖生影，出來才是 3D。
+# 擬真電影寫實風：實拍電影質感（非卡通、非動畫），真實膚質＋自然光影——
+# 這樣角色會忠實還原參考真人臉，丟進 Kling 圖生影也能維持照片級寫實。
 MANHUA_STYLE = (
-    "{subject}. Cinematic 3D CGI animation film still, Unreal Engine 5 render, stylized 3D "
-    "characters in the quality of Arcane and AAA game cinematics, physically based rendering, "
-    "volumetric lighting, subsurface scattering, detailed textures, dramatic cinematic lighting, "
-    "depth of field, epic wuxia dark fantasy, highly detailed, 8k, widescreen 16:9 cinematic "
-    "framing, no text, no watermark."
+    "{subject}. Ultra-photorealistic cinematic film still, shot on ARRI Alexa cinema camera, "
+    "hyper-realistic detail, real human skin texture with pores, natural cinematic lighting, "
+    "shallow depth of field, subtle film grain, live-action blockbuster movie quality, "
+    "epic wuxia dark fantasy, 8k, widescreen 16:9 cinematic framing, "
+    "NOT a cartoon, NOT anime, NOT a 3d render, no text, no watermark."
 )
 
 
@@ -109,9 +109,10 @@ async def imagine(request: Request):
         except Exception:
             continue
     if ref_parts:
-        prompt = ("Use the exact facial features, face shape and likeness of the "
-                  f"{len(ref_parts)} reference person(s) provided for the main character(s) in this scene. "
-                  "Keep their real-life face recognizable while rendering everything in the described style. " + prompt)
+        prompt = ("PHOTOREALISTIC IDENTITY MATCH — the main character(s) in this scene MUST be the exact same "
+                  f"real person(s) shown in the {len(ref_parts)} reference photo(s): identical face shape, "
+                  "facial features, eyes, nose, mouth, eyebrows and bone structure, as if photographing the same "
+                  "real individual. Preserve their real-life likeness precisely, photorealistic. " + prompt)
 
     # regen：加隨機變異碼，強制生成新圖並略過快取（用於「重新生成」）
     if regen:
@@ -126,7 +127,7 @@ async def imagine(request: Request):
 
     url = ("https://generativelanguage.googleapis.com/v1beta/models/"
            + IMAGE_MODEL + ":generateContent?key=" + GEMINI_API_KEY)
-    gen_cfg = {"temperature": 0.7}
+    gen_cfg = {"temperature": 0.4}
     if IMAGE_RESPONSE_MODALITIES:
         gen_cfg["responseModalities"] = [m.strip() for m in IMAGE_RESPONSE_MODALITIES.split(",") if m.strip()]
     # 參考臉圖 parts 放前面，文字指示放後面
