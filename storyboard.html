@@ -47,7 +47,7 @@
 </head>
 <body>
 <header>
-  <h1>🎬 《武曲破邪傳》分鏡批次生圖 <span class="sub">港漫電影風 · 34 格 · Gemini 影像後端</span></h1>
+  <h1>🎬 《武曲破邪傳》分鏡批次生圖 <span class="sub">港漫電影風 · 46 格（含序章）· Gemini 影像後端</span></h1>
   <div class="bar">
     <button class="primary" id="genAll">▶ 批次生成全部</button>
     <button class="ghost" id="stop" disabled>■ 停止</button>
@@ -79,9 +79,21 @@ document.getElementById("apiBase").addEventListener("change", e => {
   localStorage.setItem("wuqu_api_base", API_BASE);
 });
 
-// ── 分鏡資料：34 格（對應製作聖經 Part 2）──────────────────
+// ── 分鏡資料：46 格＝序章 10 格 + 正片 36 格（對應製作聖經 Part 2）──────────────────
 // p = 該格場景提示詞（英文）；後端會自動加港漫電影統一後綴
 const SHOTS = [
+  {act:"序章一【緣起：職場風暴・街頭裁決】", id:"0-1", sec:"0–5s", shot:"特寫", zh:"印著大大「裁員通知」的 A4 紙，狠狠砸在傑少辦公桌上", p:"extreme close-up of a printed layoff termination notice paper slammed hard onto a modern office desk, cold blue fluorescent lighting, corporate coldness, night"},
+  {act:"序章一【緣起：職場風暴・街頭裁決】", id:"0-2", sec:"5–15s", shot:"中景", zh:"傑少（現實形態）西裝略亂、領帶拉開，立於落地窗前望雨夜霓虹，雙拳死握，身後空蕩冷漠辦公室", p:"a 40-year-old exhausted Taiwanese businessman in a disheveled charcoal-grey suit with loosened tie, standing before a floor-to-ceiling office window at night, rainy city neon outside, clenched fists, empty cold office behind him"},
+  {act:"序章一【緣起：職場風暴・街頭裁決】", id:"0-3", sec:"15–22s", shot:"特寫", zh:"衣衫襤褸白髮老人在雨夜骯髒小巷被暴徒拳打腳踢，死抓胸口玉佩，氣若游絲", p:"a ragged white-haired bearded homeless old man being beaten by thugs in a dark dirty rainy alley, clutching a jade pendant on his chest desperately, dim streetlight, tragic"},
+  {act:"序章一【緣起：職場風暴・街頭裁決】", id:"0-4", sec:"22–32s", shot:"動作，過肩", zh:"傑少衝上擋下暴徒、死死抱住昏迷老人，老人噴出的血染紅他的手背", p:"a businessman rushing in to shield and embrace an unconscious old man from thugs, the old man's blood splattering onto the back of his hand, heavy rain, dramatic protective stance"},
+  {act:"序章一【緣起：職場風暴・街頭裁決】", id:"0-5", sec:"32–40s", shot:"臉部大特寫，爆發", zh:"傑少暴吼「給本主管滾」，異色瞳孔猛然爆發金藍神芒", p:"extreme close-up of a man's furious roar, his heterochromia eyes one gold one blue suddenly blazing with radiant gold-and-blue divine light, rain streaking across his face"},
+
+  {act:"序章二【穿越：因果玉甲・九世轉生】", id:"0-6", sec:"0–8s", shot:"時空凝結中景", zh:"小巷時間停止凝結，老人死抓的翡翠玉佩（祿存玉甲）在血氣觸碰下爆發排山倒海翡翠神芒", p:"time frozen in a rainy alley, everything utterly still, a battered jade pendant gripped in an old man's hand erupting with overwhelming emerald-green divine light where blood touches it, sacred"},
+  {act:"序章二【穿越：因果玉甲・九世轉生】", id:"0-7", sec:"8–16s", shot:"雙人近景", zh:"老人緩緩睜開如星空的眼，傑少身體在翡翠光中化作光碼離散", p:"an old man slowly opening his star-filled cosmic eyes, a man's body beginning to disintegrate into streams of glowing light-code particles within emerald light, awe and destiny"},
+  {act:"序章二【穿越：因果玉甲・九世轉生】", id:"0-8", sec:"16–22s", shot:"轉場大遠景", zh:"翡翠光芒炸裂、現代小巷消失，切換到焦黑翻滾的古波斯赤地火庫大門前", p:"an explosion of emerald light dissolving a modern city alley, transitioning into the gate of an ancient Persian scorched-earth fire vault, dimensional shift, epic"},
+  {act:"序章二【穿越：因果玉甲・九世轉生】", id:"0-9", sec:"22–34s", shot:"跨頁大特寫", zh:"傑少（西域形態）在綠洲白玉橋上猛然醒來，驚見雙手已換上貼身戰袍，胸口烙印融合著玉印神甲（祿存）", p:"a full-page splash shot, a man waking on a white jade bridge in a green oasis, staring in shock at his hands now clad in a form-fitting wuxia battle robe instead of a suit, a glowing jade seal armor branded and fused onto his chest"},
+  {act:"序章二【穿越：因果玉甲・九世轉生】", id:"0-10", sec:"34–42s", shot:"備戰特寫", zh:"傑少反手拔出腰間黑刀【太陽之刃】，金黑雙色刀罡暴漲，已然備戰", p:"a warrior reverse-drawing a black katana from his waist, surging gold-and-black tai-chi blade aura, determined battle-ready expression, oasis and ancient gate background"},
+
   {act:"第一幕【起：神廟破格・雙晶貫腦】", id:"1-1", sec:"0–6s",  shot:"大遠景，緩慢上升", zh:"古波斯邪神神廟，黑曜石人型上半身石碑自祭壇升起，面容扭曲痛苦", p:"ancient Persian demon temple altar, a black obsidian humanoid torso stele slowly rising, twisted agonized carved face, volumetric dust and dark energy, wide establishing shot, low angle"},
   {act:"第一幕【起：神廟破格・雙晶貫腦】", id:"1-2", sec:"6–12s", shot:"中景，環繞半圈", zh:"被陰煞控制的傑少佇立，雙眼暗紫魔光，面無表情", p:"an emotionless tall lean warrior with dark purple glowing possessed eyes standing before the stele, medium shot, cold torchlight, temple interior"},
   {act:"第一幕【起：神廟破格・雙晶貫腦】", id:"1-3", sec:"12–18s", shot:"特寫→動勢", zh:"傑少雙手暴起漆黑殘影（港漫多重殘影定格）", p:"close-up of the warrior's hands bursting into multiple black afterimages, motion blur, aggressive stance, freeze-frame tension"},
