@@ -1,0 +1,12 @@
+services:
+  - type: web
+    name: wuqu-poxie-storyboard
+    runtime: python
+    plan: free
+    buildCommand: pip install -r requirements.txt
+    startCommand: uvicorn server:app --host 0.0.0.0 --port $PORT
+    envVars:
+      - key: GEMINI_API_KEY   # Google Gemini 金鑰（需開通影像生成）；必填
+        sync: false
+      - key: IMAGE_MODEL      # 影像模型；可不填，預設 gemini-2.5-flash-image
+        sync: false

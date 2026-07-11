@@ -1,0 +1,240 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>《武曲破邪傳》分鏡批次生圖</title>
+<style>
+  :root{ --bg:#0d0f14; --panel:#161a22; --panel2:#1e2430; --line:#2b3341; --ink:#e8e6df;
+         --jade:#39c07a; --gold:#e8b64b; --purple:#8e6fc9; --red:#e8628c; --muted:#8b93a3; }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--ink);font-family:system-ui,"PingFang TC","Microsoft JhengHei",sans-serif;line-height:1.5}
+  header{position:sticky;top:0;z-index:10;background:linear-gradient(180deg,#12151c,#0d0f14);border-bottom:1px solid var(--line);padding:14px 18px}
+  h1{margin:0;font-size:19px;letter-spacing:1px}
+  h1 .sub{font-size:12px;color:var(--muted);font-weight:400;letter-spacing:0}
+  .bar{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-top:10px}
+  button{border:none;border-radius:10px;padding:8px 14px;font-weight:700;font-family:inherit;cursor:pointer;font-size:13px}
+  .primary{background:var(--jade);color:#04140b}
+  .ghost{background:var(--panel2);color:var(--ink);border:1px solid var(--line)}
+  .mini{padding:5px 10px;font-size:12px;border-radius:8px}
+  button:disabled{opacity:.5;cursor:not-allowed}
+  input,textarea{background:#0b0d12;color:var(--ink);border:1px solid var(--line);border-radius:8px;padding:7px 9px;font-family:inherit;font-size:12px;width:100%}
+  .prog{flex:1;min-width:160px;height:8px;background:var(--panel2);border-radius:6px;overflow:hidden}
+  .prog > i{display:block;height:100%;width:0;background:linear-gradient(90deg,var(--jade),var(--gold));transition:width .3s}
+  .status{font-size:12px;color:var(--muted)}
+  main{padding:16px 18px 60px;max-width:1400px;margin:0 auto}
+  .act{margin:26px 0 10px;font-size:15px;font-weight:800;color:var(--gold);border-left:4px solid var(--gold);padding-left:10px}
+  .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:14px}
+  .card{background:var(--panel);border:1px solid var(--line);border-radius:14px;overflow:hidden;display:flex;flex-direction:column}
+  .thumb{position:relative;aspect-ratio:16/9;background:#0b0d12 repeating-linear-gradient(45deg,#0e1117,#0e1117 10px,#0b0d12 10px,#0b0d12 20px);display:flex;align-items:center;justify-content:center;overflow:hidden}
+  .thumb img{width:100%;height:100%;object-fit:cover;display:block}
+  .thumb .ph{color:#39414f;font-size:34px}
+  .thumb .spin{width:28px;height:28px;border:3px solid #2b3341;border-top-color:var(--jade);border-radius:50%;animation:spin 1s linear infinite}
+  @keyframes spin{to{transform:rotate(360deg)}}
+  .badge{position:absolute;top:8px;left:8px;background:rgba(0,0,0,.6);border:1px solid var(--line);border-radius:8px;padding:2px 8px;font-size:11px;font-weight:800;color:var(--jade)}
+  .sec{position:absolute;top:8px;right:8px;background:rgba(0,0,0,.6);border-radius:8px;padding:2px 8px;font-size:11px;color:var(--muted)}
+  .err{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;color:var(--red);font-size:12px;text-align:center;padding:10px}
+  .body{padding:10px 12px;display:flex;flex-direction:column;gap:8px}
+  .shotname{font-size:12px;color:var(--muted);font-weight:700}
+  .zh{font-size:13.5px}
+  details summary{cursor:pointer;font-size:12px;color:var(--muted);user-select:none}
+  details textarea{margin-top:6px;min-height:70px;resize:vertical}
+  .row{display:flex;gap:6px;flex-wrap:wrap}
+  .tip{background:#141a22;border:1px solid var(--line);border-radius:10px;padding:10px 12px;font-size:12px;color:var(--muted);margin-top:10px}
+  code{background:#0b0d12;padding:1px 5px;border-radius:5px;color:var(--gold)}
+  a.dl{color:var(--jade);text-decoration:none;font-size:12px;font-weight:700}
+</style>
+</head>
+<body>
+<header>
+  <h1>🎬 《武曲破邪傳》分鏡批次生圖 <span class="sub">港漫電影風 · 34 格 · Gemini 影像後端</span></h1>
+  <div class="bar">
+    <button class="primary" id="genAll">▶ 批次生成全部</button>
+    <button class="ghost" id="stop" disabled>■ 停止</button>
+    <button class="ghost" id="export">⬇ 下載分鏡聯絡表</button>
+    <button class="ghost mini" id="clear">清空全部圖</button>
+    <div class="prog"><i id="progBar"></i></div>
+    <span class="status" id="status">就緒</span>
+  </div>
+  <div class="bar">
+    <span class="status">後端網址（同源部署留空即可）：</span>
+    <input id="apiBase" placeholder="留空 = 同源；或填 https://你的-render.onrender.com" style="max-width:360px">
+  </div>
+</header>
+<main>
+  <div class="tip">
+    用法：確認後端已設好 <code>GEMINI_API_KEY</code> → 按「批次生成全部」逐格生圖（會跳過已生成的；約每格 5–15 秒）。
+    每格可展開編輯提示詞、單獨重生、下載。圖存在瀏覽器 IndexedDB，重整不會消失。
+    後端已自動套「港漫電影統一風格」，你只需描述該格場景。最終電影級成圖建議再上 Midjourney 精修。
+  </div>
+  <div id="board"></div>
+</main>
+
+<script>
+// ── 設定 ────────────────────────────────────────────────
+let API_BASE = localStorage.getItem("wuqu_api_base") || ""; // 空=同源
+document.getElementById("apiBase").value = API_BASE;
+document.getElementById("apiBase").addEventListener("change", e => {
+  API_BASE = e.target.value.trim().replace(/\/$/, "");
+  localStorage.setItem("wuqu_api_base", API_BASE);
+});
+
+// ── 分鏡資料：34 格（對應製作聖經 Part 2）──────────────────
+// p = 該格場景提示詞（英文）；後端會自動加港漫電影統一後綴
+const SHOTS = [
+  {act:"第一幕【起：神廟破格・雙晶貫腦】", id:"1-1", sec:"0–6s",  shot:"大遠景，緩慢上升", zh:"古波斯邪神神廟，黑曜石人型上半身石碑自祭壇升起，面容扭曲痛苦", p:"ancient Persian demon temple altar, a black obsidian humanoid torso stele slowly rising, twisted agonized carved face, volumetric dust and dark energy, wide establishing shot, low angle"},
+  {act:"第一幕【起：神廟破格・雙晶貫腦】", id:"1-2", sec:"6–12s", shot:"中景，環繞半圈", zh:"被陰煞控制的傑少佇立，雙眼暗紫魔光，面無表情", p:"an emotionless tall lean warrior with dark purple glowing possessed eyes standing before the stele, medium shot, cold torchlight, temple interior"},
+  {act:"第一幕【起：神廟破格・雙晶貫腦】", id:"1-3", sec:"12–18s", shot:"特寫→動勢", zh:"傑少雙手暴起漆黑殘影（港漫多重殘影定格）", p:"close-up of the warrior's hands bursting into multiple black afterimages, motion blur, aggressive stance, freeze-frame tension"},
+  {act:"第一幕【起：神廟破格・雙晶貫腦】", id:"1-4", sec:"18–24s", shot:"衝擊特寫，定格1拍", zh:"左右開弓，雙幻晶石刺入石碑太陽穴，黑曜石爆碎", p:"impact close-up, two glowing crystal shards pierced into both temples of a humanoid stone stele, obsidian shattering, sparks and shards flying, brutal force"},
+  {act:"第一幕【起：神廟破格・雙晶貫腦】", id:"1-5", sec:"24–32s", shot:"中近景", zh:"石人淒厲哀嚎、胸膛裂開，傑少奪暗紅地火血晶融入黑刀", p:"the stone figure screaming with cracking chest, the warrior pulling out a dark red fire blood-crystal and fusing it into his black katana, red glow"},
+  {act:"第一幕【起：神廟破格・雙晶貫腦】", id:"1-6", sec:"32–42s", shot:"過肩，反應鏡", zh:"燕狂歌臉色發青後退，滿臉驚駭", p:"over-the-shoulder shot of a shocked young swordsman recoiling in horror, cold dread on his pale face, dim temple"},
+  {act:"第一幕【起：神廟破格・雙晶貫腦】", id:"1-7", sec:"42–55s", shot:"臉部大特寫", zh:"傑少異色雙瞳（一金一藍帶紫氣），黑刀反光掃過，無情", p:"extreme close-up of the warrior's face, heterochromia eyes one gold one blue tinted with purple corruption, black blade reflection sweeping across, menacing cold expression"},
+
+  {act:"第二幕【承：綠洲求道・佛道贈兵】", id:"2-1", sec:"0–8s", shot:"大遠景 pan", zh:"焦黑沙漠邊界，翠綠綠洲突兀浮現，菩提樹下二老對弈", p:"a vivid green oasis emerging in a scorched black desert, a bodhi tree, two ancient elders playing a weiqi board game, wide serene shot, sacred light"},
+  {act:"第二幕【承：綠洲求道・佛道贈兵】", id:"2-2", sec:"8–15s", shot:"跟隨運鏡", zh:"傑少頂漫天黑氣踏入，實體刀痕隔空震碎白玉棋盤", p:"a black-aura warrior stepping into the oasis, a shockwave blade-slash shattering a white jade weiqi board from a distance, jade shards flying"},
+  {act:"第二幕【承：綠洲求道・佛道贈兵】", id:"2-3", sec:"15–24s", shot:"雙人中景", zh:"燕狂歌、廉貞女雙膝跪地磕出血，懇求前輩", p:"two young warriors kneeling hard on rocky ground, foreheads bleeding, pleading with desperate expressions, emotional medium shot"},
+  {act:"第二幕【承：綠洲求道・佛道贈兵】", id:"2-4", sec:"24–36s", shot:"儀式感中景，微仰角", zh:"天梁老人揮手，神將祿存化實體翡翠戰鎧拍入傑少胸膛（招牌鏡頭）", p:"a wise elder waving his hand, a jade-green mystical armor materializing from green energy particles and pressing into the warrior's chest, sacred formation, hero shot, slight low angle"},
+  {act:"第二幕【承：綠洲求道・佛道贈兵】", id:"2-5", sec:"36–44s", shot:"特寫", zh:"玉甲扣合、鎖住良心，傑少瞳孔一縮", p:"close-up, the jade-green armor clasping shut over the warrior's chest, his pupil contracting, green light pulsing across his face"},
+  {act:"第二幕【承：綠洲求道・佛道贈兵】", id:"2-6", sec:"44–55s", shot:"過肩", zh:"玄奘將降魔杵交予廉貞女，佛光淨白", p:"over-the-shoulder, a benevolent monk handing a glowing golden buddhist demon-subduing pestle to a female warrior, warm holy white light"},
+  {act:"第二幕【承：綠洲求道・佛道贈兵】", id:"2-7", sec:"55–65s", shot:"廉貞女特寫", zh:"雙手接杵，眼神堅定又含淚（埋線）", p:"close-up of a beautiful ancient Chinese female warrior receiving the pestle with both hands, determined yet teary eyes, high ponytail"},
+
+  {act:"第三幕【轉：天機解鎖・九世歸一】", id:"3-1", sec:"0–8s", shot:"俯衝運鏡", zh:"破軍自天而降千斤墜，砸爛敵軍鐵壁", p:"a heavy armored warrior descending from the sky with a gravity slam crushing an enemy iron wall, rubble and shockwave, dynamic diving shot"},
+  {act:"第三幕【轉：天機解鎖・九世歸一】", id:"3-2", sec:"8–16s", shot:"大遠景", zh:"聖地磁場爆發，牧羊少年天機旋化金色球體隔絕磁場", p:"wide shot, sacred field magnetic burst, a young shepherd boy's cyan-gold wind vortex forming a golden protective sphere, epic desert ruins"},
+  {act:"第三幕【轉：天機解鎖・九世歸一】", id:"3-3", sec:"16–24s", shot:"中景", zh:"陰煞黑氣被甩出傑少體內，少年天機眼質變開啟宿世通", p:"black corrupting qi being violently expelled from the warrior's body, a boy with a glowing golden star-map mandala eye on his forehead, dramatic close shot"},
+  {act:"第三幕【轉：天機解鎖・九世歸一】", id:"3-4", sec:"24–32s", shot:"近景，情緒", zh:"少年發瘋抱住傑少右臂，傑少意識回清明", p:"a ragged boy desperately clutching the warrior's right arm, the warrior's heterochromia eyes regaining clarity, emotional close-up"},
+  {act:"第三幕【轉：天機解鎖・九世歸一】", id:"3-5", sec:"32–48s", shot:"走馬燈蒙太奇", zh:"「一為九、九亦為一」前八世武功歸一（八格港漫定格快閃）", p:"a montage collage of nine past-life warrior afterimages merging into one glowing figure, nine become one, golden light streaks, manhua freeze-frame collage panels"},
+  {act:"第三幕【轉：天機解鎖・九世歸一】", id:"3-6", sec:"48–56s", shot:"神兵特寫", zh:"黑刀蛻變為金黑雙色太極刀罡（招牌鏡頭）", p:"hero close-up of a black katana transforming into a swirling gold-and-black tai-chi yin-yang energy blade aura, radiant"},
+  {act:"第三幕【轉：天機解鎖・九世歸一】", id:"3-7", sec:"56–70s", shot:"極速對撞，定格2拍", zh:"邪帝撕裂虛空魔爪取少年，傑少聖陽斬迎頭硬撼，空間震碎", p:"extreme high-speed clash, a dark warlord tearing open a rift in space with his scaled claw reaching for a boy, the warrior blocking head-on with a radiant golden solar slash, space cracking, freeze-frame"},
+  {act:"第三幕【轉：天機解鎖・九世歸一】", id:"3-8", sec:"70–82s", shot:"台詞交火", zh:"邪帝紫微黑氣 vs 傑少金黑刀罡，僵持對峙", p:"a dark warlord with purple digital-code black aura locked in a clash against a warrior wielding a gold-black tai-chi blade, tense standoff, lava-lit cavern"},
+  {act:"第三幕【轉：天機解鎖・九世歸一】", id:"3-9", sec:"82–90s", shot:"臉部大特寫", zh:"傑少瞳孔神芒暴漲，震碎周圍空間", p:"extreme close-up of the warrior's face, pupils blazing with divine golden light shattering the surrounding space, overwhelming aura"},
+
+  {act:"第四幕【合：前狼後虎・致命背刺】", id:"4-1", sec:"0–10s", shot:"僵持全景，地動", zh:"傑少與邪帝正面僵持，山搖地動", p:"wide shot, a warrior and a dark warlord in a tense standoff, the ground quaking and cracking, ominous apocalyptic atmosphere"},
+  {act:"第四幕【合：前狼後虎・致命背刺】", id:"4-2", sec:"10–20s", shot:"潛行視角", zh:"甩出的陰煞黑氣如毒蛇竄入後方廉貞女體內", p:"stalker POV, expelled black qi snaking like a serpent creeping into the body of a female warrior standing behind, creeping dread"},
+  {act:"第四幕【合：前狼後虎・致命背刺】", id:"4-3", sec:"20–28s", shot:"轉變特寫", zh:"廉貞女失智雙眸轉暗紫，降魔杵扭曲成暗金魔煞", p:"close-up transformation, a female warrior's eyes turning dark purple, her holy pestle twisting into a dark-gold demonic weapon, corrupted aura"},
+  {act:"第四幕【合：前狼後虎・致命背刺】", id:"4-4", sec:"28–40s", shot:"死角背刺，定格1拍", zh:"被附身的廉貞女化暗金魔光，自傑少背後死角狂刺背心", p:"blind-spot betrayal, a possessed female warrior as dark-gold light stabbing a warrior in the back with a demonic pestle, sharp motion trail, freeze-frame, tragic"},
+  {act:"第四幕【合：前狼後虎・致命背刺】", id:"4-5", sec:"40–50s", shot:"邪帝獰笑特寫", zh:"邪帝黏住黑刀，勝券在握的獰笑", p:"close-up of a dark warlord's cruel triumphant grin, dark magic sticking the warrior's black blade in place, menacing"},
+
+  {act:"終章【天機幻滅・因果終局】", id:"5-1", sec:"0–10s", shot:"急速近景", zh:"少年撲抓廉貞女被魔煞震飛，右手血流不止", p:"close-up, a boy recklessly lunging to grab a female warrior's arm, blasted back by demonic force, his right hand bleeding heavily"},
+  {act:"終章【天機幻滅・因果終局】", id:"5-2", sec:"10–22s", shot:"神蹟中景", zh:"純淨之血×砂岩沙塵聚合，爆發翡翠光【天機幻】（最高規特效）", p:"a boy's pure blood mixing with sandstone dust in a swirling vortex, erupting into brilliant emerald green light ripples, the ultimate mystical technique, ancient beast roar energy"},
+  {act:"終章【天機幻滅・因果終局】", id:"5-3", sec:"22–34s", shot:"合擊，定格2拍", zh:"傑少左手搶降魔杵、右手反握太陽之刃，刀杵合流重創邪帝", p:"combined strike, a warrior grabbing a pestle with his left hand and reverse-gripping a solar blade in his right, blade-and-pestle fusion smashing a warlord, light burst, freeze-frame"},
+  {act:"終章【天機幻滅・因果終局】", id:"5-4", sec:"34–42s", shot:"邪帝敗亡特寫", zh:"邪帝噴黏稠化學黑血，不死魔身破滅，狂轟大門機關", p:"a defeated warlord vomiting thick chemical black blood, his immortal demon body breaking apart, smashing a giant door mechanism in desperation"},
+  {act:"終章【天機幻滅・因果終局】", id:"5-5", sec:"42–54s", shot:"崩塌大遠景", zh:"砂岩洞窟大面積坍塌下沉", p:"wide shot, a massive sandstone cavern collapsing and sinking on a huge scale, dust explosion, catastrophic"},
+  {act:"終章【天機幻滅・因果終局】", id:"5-6", sec:"54–66s", shot:"史詩仰角", zh:"天馬自時間狹縫鑽出，傑少挾廉貞女、抓少年趴上天馬衝入裂縫", p:"epic low angle, a mythic winged horse (Pegasus) bursting from a crack in time, a warrior carrying an unconscious female warrior and a boy leaping onto it into a dimensional rift, cosmic light streaks"},
+  {act:"終章【天機幻滅・因果終局】", id:"5-7", sec:"66–78s", shot:"時空通道特寫", zh:"少年因維度拉扯迅速老化成天機老人，純白光罩包裹二人", p:"inside a dimensional time tunnel, a boy rapidly aging into an ancient white-haired bearded sage, a pure white light cocoon wrapping two figures, dimensional light patterns, tender farewell"},
+  {act:"終章【天機幻滅・因果終局】", id:"5-8", sec:"78–80s", shot:"尾景，朝陽", zh:"白光穿越維度重回中身世界，朝陽升起", p:"final shot, a pure white light emerging into a modern world at dawn, a rising sun over a city skyline, quiet hopeful epilogue"},
+];
+
+// ── IndexedDB 圖片持久化 ─────────────────────────────────
+let DB=null;
+function db(){return new Promise((res)=>{ if(DB)return res(DB); const q=indexedDB.open("wuqu_sb",1);
+  q.onupgradeneeded=e=>e.target.result.createObjectStore("img");
+  q.onsuccess=e=>{DB=e.target.result;res(DB)}; q.onerror=()=>res(null);});}
+async function imgGet(id){const d=await db();if(!d)return null;return new Promise(r=>{const t=d.transaction("img").objectStore("img").get(id);t.onsuccess=()=>r(t.result||null);t.onerror=()=>r(null);});}
+async function imgPut(id,v){const d=await db();if(!d)return;d.transaction("img","readwrite").objectStore("img").put(v,id);}
+async function imgDel(id){const d=await db();if(!d)return;d.transaction("img","readwrite").objectStore("img").delete(id);}
+async function imgClear(){const d=await db();if(!d)return;d.transaction("img","readwrite").objectStore("img").clear();}
+
+// ── 渲染 ────────────────────────────────────────────────
+const board=document.getElementById("board");
+const state={}; // id -> {img}
+function el(html){const t=document.createElement("template");t.innerHTML=html.trim();return t.content.firstChild;}
+
+function render(){
+  board.innerHTML="";
+  let curAct=null,grid=null;
+  for(const s of SHOTS){
+    if(s.act!==curAct){curAct=s.act;board.appendChild(el(`<div class="act">${s.act}</div>`));grid=el(`<div class="grid"></div>`);board.appendChild(grid);}
+    const card=el(`<div class="card" id="card-${s.id}">
+      <div class="thumb" id="thumb-${s.id}"><span class="ph">🎬</span><span class="badge">${s.id}</span><span class="sec">${s.sec}</span></div>
+      <div class="body">
+        <div class="shotname">${s.shot}</div>
+        <div class="zh">${s.zh}</div>
+        <details><summary>提示詞（可編輯）</summary><textarea id="p-${s.id}">${s.p}</textarea></details>
+        <div class="row">
+          <button class="primary mini" data-gen="${s.id}">生成</button>
+          <button class="ghost mini" data-regen="${s.id}">重生</button>
+          <a class="dl" id="dl-${s.id}" style="display:none">⬇ 下載</a>
+        </div>
+      </div></div>`);
+    grid.appendChild(card);
+  }
+  board.querySelectorAll("[data-gen]").forEach(b=>b.onclick=()=>genOne(b.dataset.gen,false));
+  board.querySelectorAll("[data-regen]").forEach(b=>b.onclick=()=>genOne(b.dataset.regen,true));
+}
+
+function setThumb(id,mode,payload){
+  const t=document.getElementById("thumb-"+id);
+  const badge=`<span class="badge">${id}</span>`;
+  const shot=SHOTS.find(x=>x.id===id);
+  const sec=`<span class="sec">${shot.sec}</span>`;
+  if(mode==="loading") t.innerHTML=`<span class="spin"></span>${badge}${sec}`;
+  else if(mode==="img"){ t.innerHTML=`<img src="${payload}" alt="${id}">${badge}${sec}`;
+    const a=document.getElementById("dl-"+id);a.href=payload;a.download=`武曲_${id}.png`;a.style.display="inline";}
+  else if(mode==="err") t.innerHTML=`<div class="err">⚠ ${payload}</div>${badge}${sec}`;
+  else t.innerHTML=`<span class="ph">🎬</span>${badge}${sec}`;
+}
+
+async function genOne(id,regen){
+  const shot=SHOTS.find(x=>x.id===id);
+  const prompt=document.getElementById("p-"+id).value.trim()||shot.p;
+  setThumb(id,"loading");
+  try{
+    const r=await fetch((API_BASE||"")+"/imagine",{method:"POST",headers:{"Content-Type":"application/json"},
+      body:JSON.stringify({prompt,style:"manhua",regen:!!regen})});
+    const d=await r.json();
+    if(!r.ok||!d.image) throw new Error(d.error||("HTTP "+r.status));
+    state[id]={img:d.image}; await imgPut(id,d.image); setThumb(id,"img",d.image); return true;
+  }catch(e){ setThumb(id,"err",(e&&e.message)||"失敗"); return false; }
+}
+
+// ── 批次生成（序列，避免打爆 API）────────────────────────
+let running=false,stopFlag=false;
+const genAllBtn=document.getElementById("genAll"),stopBtn=document.getElementById("stop");
+const bar=document.getElementById("progBar"),status=document.getElementById("status");
+genAllBtn.onclick=async()=>{
+  if(running)return; running=true;stopFlag=false;genAllBtn.disabled=true;stopBtn.disabled=false;
+  const todo=SHOTS.filter(s=>!state[s.id]); let done=0,ok=0;
+  status.textContent=`開始：${todo.length} 格待生成`;
+  for(const s of todo){
+    if(stopFlag){status.textContent="已停止";break;}
+    status.textContent=`生成中 ${s.id}（${done+1}/${todo.length}）…`;
+    if(await genOne(s.id,false))ok++;
+    done++; bar.style.width=Math.round(done/Math.max(1,todo.length)*100)+"%";
+  }
+  if(!stopFlag)status.textContent=`完成：成功 ${ok}/${todo.length}`;
+  running=false;genAllBtn.disabled=false;stopBtn.disabled=true;
+};
+stopBtn.onclick=()=>{stopFlag=true;stopBtn.disabled=true;status.textContent="停止中…";};
+
+// ── 清空 ────────────────────────────────────────────────
+document.getElementById("clear").onclick=async()=>{
+  if(!confirm("確定清空所有已生成的圖？（提示詞保留）"))return;
+  await imgClear(); for(const k in state)delete state[k]; render(); status.textContent="已清空";
+};
+
+// ── 匯出分鏡聯絡表（自包含 HTML）─────────────────────────
+document.getElementById("export").onclick=()=>{
+  const cells=SHOTS.map(s=>{const img=state[s.id]?`<img src="${state[s.id].img}">`:`<div class="ph">未生成</div>`;
+    return `<div class="c"><div class="h"><b>${s.id}</b> <span>${s.sec}</span></div>${img}
+      <div class="t"><i>${s.shot}</i><br>${s.zh}</div></div>`;}).join("");
+  const html=`<!doctype html><meta charset=utf-8><title>武曲破邪傳 分鏡聯絡表</title>
+  <style>body{background:#0d0f14;color:#e8e6df;font-family:system-ui,"PingFang TC",sans-serif;margin:20px}
+  h1{color:#e8b64b} .g{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:12px}
+  .c{background:#161a22;border:1px solid #2b3341;border-radius:12px;overflow:hidden}
+  .c img{width:100%;aspect-ratio:16/9;object-fit:cover;display:block} .ph{aspect-ratio:16/9;display:flex;align-items:center;justify-content:center;color:#39414f}
+  .h{display:flex;justify-content:space-between;padding:6px 10px;color:#39c07a;font-size:12px} .h span{color:#8b93a3}
+  .t{padding:0 10px 10px;font-size:12.5px} .t i{color:#8b93a3}</style>
+  <h1>🎬 《武曲破邪傳》分鏡聯絡表</h1><div class="g">${cells}</div>`;
+  const a=document.createElement("a");a.href=URL.createObjectURL(new Blob([html],{type:"text/html"}));
+  a.download="武曲破邪傳_分鏡聯絡表.html";a.click();
+};
+
+// ── 啟動：還原已存圖 ─────────────────────────────────────
+(async function(){
+  render();
+  for(const s of SHOTS){const v=await imgGet(s.id);if(v){state[s.id]={img:v};setThumb(s.id,"img",v);}}
+  const n=Object.keys(state).length; status.textContent=n?`已還原 ${n} 格`:"就緒";
+})();
+</script>
+</body>
+</html>
